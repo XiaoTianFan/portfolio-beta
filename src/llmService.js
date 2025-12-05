@@ -1,18 +1,10 @@
 export class LLMService {
     constructor() {
-        this.apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-        this.apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+        // Use proxy endpoint instead of direct API
+        this.apiUrl = '/api/openrouter';
     }
 
     async sendChat(messages, projects, viewedProjectIds = []) {
-        if (!this.apiKey) {
-            console.error('OpenRouter API Key is missing.');
-            return {
-                message: "I'm sorry, but I'm not configured correctly yet (missing API key).",
-                action: "chat"
-            };
-        }
-
         const systemPrompt = this.createSystemPrompt(projects, viewedProjectIds);
         
         // Prepare messages array with system prompt at the start
@@ -25,10 +17,7 @@ export class LLMService {
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${this.apiKey}`,
-                    'Content-Type': 'application/json',
-                    'HTTP-Referer': window.location.origin, 
-                    'X-Title': 'Portfolio Assistant' 
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     model: 'google/gemini-2.5-flash-lite', 
@@ -39,7 +28,8 @@ export class LLMService {
             });
 
             if (!response.ok) {
-                throw new Error(`API request failed with status ${response.status}`);
+                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                throw new Error(errorData.error || `API request failed with status ${response.status}`);
             }
 
             const data = await response.json();

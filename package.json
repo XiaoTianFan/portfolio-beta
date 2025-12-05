@@ -9,7 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@elevenlabs/elevenlabs-js": "^2.26.0",
     "gsap": "^3.13.0",
     "three": "^0.160.0"
   },

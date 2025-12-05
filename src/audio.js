@@ -1,60 +1,23 @@
-import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
-
 export class AudioService {
     constructor() {
         this.recognition = null;
         this.isListening = false;
         this.currentAudio = null;
-        this.apiKey = import.meta.env.VITE_ELEVENLABS_API_KEY;
         
         // Default voice and model configuration
         this.defaultVoiceId = "CwhRBWXzGAHq8TQ4Fs17"; // Default voice ID
         this.defaultModelId = "eleven_turbo_v2_5";
         this.outputFormat = "mp3_44100_128";
-
-        // Initialize ElevenLabs client if API key is available
-        if (this.apiKey) {
-            this.elevenlabs = new ElevenLabsClient({
-                apiKey: this.apiKey
-            });
-            // Temporarily disabled: Fetch available voices on initialization
-            // this.initializeVoices();
-        } else {
-            console.warn('ElevenLabs API Key is missing. TTS will not work.');
-            this.elevenlabs = null;
-        }
+        
+        // Use proxy endpoint instead of direct API
+        this.apiUrl = '/api/elevenlabs';
 
         this.initSpeechRecognition();
     }
 
     async initializeVoices() {
-        if (!this.elevenlabs) {
-            return;
-        }
-
-        try {
-            const voicesResponse = await this.elevenlabs.voices.search({});
-            const voices = voicesResponse.voices;
-
-            // Log all fetched voices with their IDs
-            console.log('Fetched ElevenLabs voices:');
-            voices.forEach((voice, index) => {
-                console.log(`  ${index + 1}. Name: "${voice.name}", ID: "${voice.voiceId}"`);
-            });
-
-            // Use the first voice by default
-            if (voices.length > 0) {
-                this.defaultVoiceId = voices[0].voiceId;
-                console.log(`Using default voice: "${voices[0].name}" (ID: ${this.defaultVoiceId})`);
-            } else {
-                console.warn('No voices found. TTS may not work.');
-            }
-        } catch (error) {
-            console.error('Error fetching voices:', error);
-            // Fallback to a known working voice_id if available
-            // Note: This is a temporary fallback - user should verify their API key
-            this.defaultVoiceId = null;
-        }
+        // Voice initialization disabled - using default voice ID
+        console.log(`Using default voice ID: ${this.defaultVoiceId}`);
     }
 
     initSpeechRecognition() {
@@ -124,15 +87,8 @@ export class AudioService {
     }
 
     async speak(text, onStart, onEnd) {
-        if (!this.elevenlabs) {
-            console.error('ElevenLabs API Key is missing. Cannot generate speech.');
-            // Fallback to Web Speech API
-            this.speakWithWebSpeechAPI(text, onStart, onEnd);
-            return;
-        }
-
         if (!this.defaultVoiceId) {
-            console.error('No voice ID available. Please wait for voices to be fetched.');
+            console.error('No voice ID available.');
             // Fallback to Web Speech API
             this.speakWithWebSpeechAPI(text, onStart, onEnd);
             return;
@@ -142,32 +98,32 @@ export class AudioService {
         this.cancelSpeech();
 
         try {
-            // Generate audio using ElevenLabs streaming API
-            const audioStream = await this.elevenlabs.textToSpeech.stream(this.defaultVoiceId, {
-                text: text,
-                modelId: this.defaultModelId,
-                outputFormat: this.outputFormat
+            // Call the proxy endpoint instead of using the SDK
+            const response = await fetch(this.apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    voiceId: this.defaultVoiceId,
+                    text: text,
+                    modelId: this.defaultModelId,
+                    outputFormat: this.outputFormat
+                })
             });
 
-            // Collect audio chunks from the stream
-            const audioChunks = [];
-            for await (const chunk of audioStream) {
-                if (chunk) {
-                    audioChunks.push(chunk);
-                }
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                throw new Error(errorData.error || `API request failed with status ${response.status}`);
             }
 
-            // Combine all chunks into a single Uint8Array
-            const totalLength = audioChunks.reduce((sum, chunk) => sum + chunk.length, 0);
-            const combinedAudio = new Uint8Array(totalLength);
-            let offset = 0;
-            for (const chunk of audioChunks) {
-                combinedAudio.set(chunk, offset);
-                offset += chunk.length;
-            }
-
+            const data = await response.json();
+            
+            // Decode base64 audio data
+            const audioBytes = Uint8Array.from(atob(data.audio), c => c.charCodeAt(0));
+            
             // Convert audio response to blob URL for playback
-            const audioBlob = new Blob([combinedAudio], { type: 'audio/mpeg' });
+            const audioBlob = new Blob([audioBytes], { type: 'audio/mpeg' });
             const audioUrl = URL.createObjectURL(audioBlob);
 
             // Create Audio object for playback

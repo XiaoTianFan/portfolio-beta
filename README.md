@@ -31,8 +31,38 @@ Meaning is not inherent but constructed through interaction. Each project presen
 - **Three.js**: 3D graphics and metaball rendering
 - **GSAP**: Animation and transitions
 - **OpenRouter API**: LLM service (Gemini 2.5 Flash Lite)
-- **Web Speech API**: Voice recognition and synthesis
+- **ElevenLabs API**: Text-to-speech synthesis
+- **Web Speech API**: Voice recognition and fallback synthesis
 - **Vite**: Build tool and development server
+- **Vercel Serverless Functions**: API proxy for secure key management
+
+## Setup
+
+### Environment Variables
+
+For local development, create a `.env` file in the root directory (optional - keys are not needed client-side anymore):
+
+```env
+# Not needed for local dev - API keys are handled server-side
+```
+
+### Vercel Deployment
+
+When deploying to Vercel, add these environment variables in your Vercel project settings:
+
+- `OPENROUTER_API_KEY` - Your OpenRouter API key (without `VITE_` prefix)
+- `ELEVENLABS_API_KEY` - Your ElevenLabs API key (without `VITE_` prefix)
+
+**Important**: Do NOT use `VITE_` prefix for these keys. They are stored server-side only and accessed through the API proxy functions in `/api`.
+
+### API Proxy
+
+The project uses Vercel serverless functions to proxy API requests, keeping API keys secure on the server:
+
+- `/api/openrouter` - Proxies requests to OpenRouter API
+- `/api/elevenlabs` - Proxies requests to ElevenLabs API
+
+This ensures API keys are never exposed to the browser.
 
 ## Philosophy
 
