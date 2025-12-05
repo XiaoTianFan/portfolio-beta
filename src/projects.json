@@ -1,0 +1,45 @@
+[
+  {
+    "id": "hi-how-are-you",
+    "title": "HI, HOW ARE YOU?",
+    "description": "A short film about time, repetition, and memory, shot within 30 minutes. This player is part of the work—not a wrapper around it. It treats viewing as an act of co‑composition: the film loops, the interface listens, and the audience shapes tempo.",
+    "url": "https://xiaotianfan.github.io/30MFF-HI-HOW-ARE-YOU/",
+    "keywords": ["film", "time", "repetition", "memory"]
+  },
+  {
+    "id": "im-labels",
+    "title": "I'm Labels (?)",
+    "description": "A work that attempts to explore the notion of 'labels' as a form of identity, a minimalist, scroll-driven typographic autobiographical story.",
+    "url": "https://xiaotianfan.github.io/Im-Labels/",
+    "keywords": ["typography", "autobiography", "identity", "minimalism"]
+  },
+  {
+    "id": "progdoze",
+    "title": "ProgDoze",
+    "description": "A drifting collage of progressive rock fragments — iconic cover art silhouettes ripple across the screen while curated song clips fade in and out like memories from a cosmic cassette.",
+    "url": "https://xiaotianfan.github.io/Prog-Doze/",
+    "keywords": ["progressive rock", "collage", "cover art", "memories"]
+  },
+  {
+    "id": "dream-or-sketch",
+    "title": "Dream or Sketch",
+    "description": "An interactive meta-comic about looping dreams and false awakenings. Advance the story by clicking hotspots to explore seven dream stages. The comic is aware of its own surreal, repetitive structure.",
+    "url": "https://xiaotianfan.github.io/Dream-or-Sketch/",
+    "keywords": ["comic", "dream", "false awakening", "looping", "surrealism"]
+  },
+  {
+    "id": "kitchen-chaos",
+    "title": "Kitchen Chaos",
+    "description": "A minimal, abstract animation about the chaos of a kitchen. An everyday kitchen slips from calm preparation into escalating mishaps and, finally, full chaos. You conduct the narrative with simple gestures, and the world answers in sound and playful, candy‑pastel visuals.",
+    "url": "https://xiaotianfan.github.io/Kitchen-Chaos/",
+    "keywords": ["animation", "kitchen", "chaos", "pastel"]
+  },
+  {
+    "id": "scavenger-hunt",
+    "title": "Scavenger Hunt",
+    "description": "An interactive scavenger hunt set in a retro-realistic-futuristic world. Play as Agent 734, using video feeds and terminal commands to explore a campus and complete your mission.",
+    "url": "https://xiaotianfan.github.io/scavenger-hunt/",
+    "keywords": ["scavenger hunt", "retro-realistic-futuristic", "agent 734"]
+  }
+]
+

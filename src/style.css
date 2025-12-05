@@ -1,0 +1,437 @@
+﻿:root {
+    --bg-color: #0a0a0e;
+    --text-color: #ffffff;
+    --accent-color: #a0a0ff;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --font-main: 'Outfit', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-main);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+}
+
+#canvas-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* Face Overlay */
+#face-container {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform-origin: center center;
+    z-index: 5;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Position will be updated dynamically via JavaScript using transforms */
+    /* Initial centering handled by xPercent: -50, yPercent: -50 in GSAP */
+}
+
+#face-container svg {
+    width: 240px;
+    height: 240px;
+    filter: drop-shadow(0 0 12px rgba(0, 0, 0, 0.5));
+}
+
+#face-container .face-element {
+    transform-origin: center;
+}
+
+.ui-layer {
+    position: relative;
+    z-index: 10;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 2rem;
+    pointer-events: none;
+}
+
+.ui-layer > * {
+    pointer-events: auto;
+}
+
+header {
+    display: flex;
+    justify-content: center;
+    padding-top: 1rem;
+}
+
+.text-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-family: var(--font-main);
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.text-btn:hover {
+    color: #fff;
+}
+
+.bottom-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 1.5rem;
+    width: 100%;
+}
+
+.landing-chat-container {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.landing-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    justify-content: center;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 8px;
+    border-radius: 50%;
+}
+
+.icon-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.input-container {
+    width: 500px;
+    position: relative;
+}
+
+#landing-input {
+    width: 100%;
+    background: none;
+    border: none;
+    color: #fff;
+    font-family: var(--font-main);
+    font-size: 1rem;
+    text-align: left;
+    padding: 0.5rem;
+    outline: none;
+}
+
+.input-line {
+    width: 100%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.2);
+    margin-top: 4px;
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+#landing-input:focus + .input-line {
+    background: rgba(255, 255, 255, 0.8);
+    transform: scaleX(1.05);
+}
+
+#about-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 20;
+    background: rgba(10, 10, 14, 0.95);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease;
+}
+
+#about-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.about-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+    overflow-y: auto;
+}
+
+.about-text {
+    max-width: 800px;
+    color: var(--text-color);
+    font-family: var(--font-main);
+    line-height: 1.8;
+}
+
+.about-text h1 {
+    font-size: 2.5rem;
+    font-weight: 300;
+    margin-bottom: 2rem;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.about-text p {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 300;
+}
+
+#about-close-btn {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+#embedded-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 20;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease;
+}
+
+#embedded-layer.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#content-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+    filter: brightness(0.9);
+}
+
+.chat-overlay {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 600px;
+    background: rgba(10, 10, 14, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+#embedded-layer.active .chat-overlay {
+    display: none !important;
+}
+
+.chat-input-area {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+}
+
+#chat-input {
+    flex: 1;
+    background: none;
+    border: none;
+    color: #fff;
+    font-family: var(--font-main);
+    font-size: 1rem;
+    outline: none;
+}
+
+.close-btn {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.hidden {
+    display: none;
+}
+
+#mic-btn.listening {
+    color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.15);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);
+    }
+}
+
+.chat-history {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 4px;
+    display: flex;
+    flex-direction: column;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    width: 100%;
+    position: relative;
+}
+
+.landing-chat-history {
+    background: transparent;
+    max-height: 200px;
+    padding: 1rem 0;
+    mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 100%);
+}
+
+.chat-history::-webkit-scrollbar {
+    width: 4px;
+}
+.chat-history::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+.chat-msg {
+    word-wrap: break-word;
+    word-break: break-word;
+    text-align: left;
+}
+
+.chat-msg.user {
+    background: rgba(160, 160, 255, 0.2) !important;
+}
+
+.chat-msg.system {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.chat-msg.loading {
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+}
+
+/* Animated cursor when TTS is active */
+body.tts-active {
+    cursor: none;
+}
+
+#tts-cursor {
+    position: fixed;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(160, 160, 255, 0.8);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    box-shadow: 0 0 10px rgba(160, 160, 255, 0.5);
+}
+
+#tts-cursor.active {
+    opacity: 1;
+    animation: cursorPulse 1.5s ease-in-out infinite;
+}
+
+#tts-cursor-inner {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    background: rgba(160, 160, 255, 0.9);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 10000;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#tts-cursor-inner.active {
+    opacity: 1;
+    animation: cursorInnerPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes cursorPulse {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.3);
+        opacity: 0.4;
+    }
+}
+
+@keyframes cursorInnerPulse {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 0.5;
+    }
+}

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metaball Interface</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="tts-cursor"></div>
+    <div id="tts-cursor-inner"></div>
+
+    <!-- Landing UI -->
+    <div id="landing-ui" class="ui-layer">
+        <header>
+            <button id="about-btn" class="text-btn">ABOUT</button>
+        </header>
+        
+        <div class="bottom-controls">
+            <div class="landing-chat-container">
+                <div class="chat-history landing-chat-history" id="landing-chat-history"></div>
+                <div class="landing-input-wrapper">
+                    <button id="mic-btn" class="icon-btn">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                        </svg>
+                    </button>
+                    <div class="input-container">
+                        <input type="text" id="landing-input" placeholder=" " autocomplete="off">
+                        <div class="input-line"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Overlay (Hidden initially) -->
+    <div id="about-overlay" class="hidden">
+        <div class="about-content">
+            <button id="about-close-btn" class="icon-btn close-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <div class="about-text">
+                <h1>About This Portfolio</h1>
+                <p>
+                    This portfolio embodies a philosophy of agency and curation. Rather than presenting a static collection of projects, 
+                    it empowers an intelligent agent to proactively select and present work based on context, conversation, and intent.
+                </p>
+                <p>
+                    The traditional portfolio is a monologue—a fixed narrative chosen by its creator. Here, the portfolio becomes a dialogue. 
+                    The agent observes, interprets, and curates in real-time, selecting projects that resonate with the moment, the question, 
+                    or the emerging understanding between visitor and work.
+                </p>
+                <p>
+                    This approach acknowledges that meaning is not inherent but constructed through interaction. Each project presentation 
+                    is not predetermined but emerges from the intersection of inquiry and intelligence. The agent doesn't simply retrieve—it 
+                    reasons, connects, and chooses, transforming the portfolio from a showcase into a collaborative exploration.
+                </p>
+                <p>
+                    In letting the agent select, we embrace uncertainty and possibility. We, instead of only trust in the capacity of intelligent systems 
+                    to make meaningful connections, to see patterns we might miss, and to curate experiences that are both surprising and 
+                    deeply relevant, but also to be aware of the limitations of the system and thus realize our own agency of making each decision in the process.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Embedded Content Layer (Hidden initially) -->
+    <div id="embedded-layer" class="hidden">
+        <iframe id="content-frame" src="about:blank"></iframe>
+        <div class="chat-overlay">
+            <div class="chat-history" id="chat-history"></div>
+            <div class="chat-input-area">
+                <button class="icon-btn small">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                </button>
+                <input type="text" id="chat-input" placeholder="Ask me anything...">
+            </div>
+        </div>
+        <button id="close-btn" class="icon-btn close-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
