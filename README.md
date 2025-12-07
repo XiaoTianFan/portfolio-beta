@@ -38,13 +38,46 @@ Meaning is not inherent but constructed through interaction. Each project presen
 
 ## Setup
 
-### Environment Variables
+### Local Development
 
-For local development, create a `.env` file in the root directory (optional - keys are not needed client-side anymore):
+This project requires a local Vercel server to run the API proxy functions. Follow these steps:
 
-```env
-# Not needed for local dev - API keys are handled server-side
-```
+1. **Install Vercel CLI** (if not already installed):
+
+   ```bash
+   npm i -g vercel
+   ```
+
+2. **Start the Vercel development server**:
+
+   ```bash
+   vercel dev
+   ```
+
+   This will start the Vercel server on port 3000 by default.
+
+3. **Set up environment variables** for local development:
+
+   Create a `.env.local` file in the project root (or use `vercel env pull`):
+
+   ```env
+   OPENROUTER_API_KEY=your_openrouter_key_here
+   ELEVENLABS_API_KEY=your_elevenlabs_key_here
+   ```
+
+4. **Start the frontend development server** (in a separate terminal):
+
+   ```bash
+   npm run dev
+   ```
+
+   This will start the Vite dev server on port 5173.
+
+5. **Access the application**:
+   - Frontend: `http://localhost:5173`
+   - API endpoints: `http://localhost:3000/api/*`
+
+The frontend automatically detects the local environment and routes API requests to `localhost:3000` when running in development mode.
 
 ### Vercel Deployment
 
@@ -64,7 +97,11 @@ The project uses Vercel serverless functions to proxy API requests, keeping API 
 
 This ensures API keys are never exposed to the browser.
 
+**CORS Configuration**:
+
+- In production, API endpoints only accept requests from `beta.xiaotianfanx.com`
+- In local development, all localhost origins are allowed
+
 ## Philosophy
 
 This approach acknowledges that meaning is constructed through interaction. By letting the agent select, we embrace uncertainty and possibility—trusting in the capacity of intelligent systems to make meaningful connections, see patterns we might miss, and curate experiences that are both surprising and deeply relevant, while remaining aware of the system's limitations and our own agency in the process.
-
