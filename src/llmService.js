@@ -1,7 +1,10 @@
 export class LLMService {
     constructor() {
         // Use proxy endpoint instead of direct API
-        this.apiUrl = '/api/openrouter';
+        // In local dev, use Vercel server on port 3000; in production, use relative path
+        const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const apiBase = isLocalDev ? 'http://localhost:3000' : '';
+        this.apiUrl = `${apiBase}/api/openrouter`;
     }
 
     async sendChat(messages, projects, viewedProjectIds = []) {

@@ -3,6 +3,20 @@ import { MarchingCubes } from 'three/addons/objects/MarchingCubes.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { FaceManager } from './faceManager.js';
 
+// Quality configuration
+const QUALITY_CONFIG = {
+    HIGH: { resolution: 64, antialias: true },
+    MEDIUM: { resolution: 48, antialias: true },
+    LOW: { resolution: 32, antialias: false }
+};
+
+const FPS_THRESHOLDS = {
+    DEGRADE: 30,  // Reduce quality below this
+    UPGRADE: 55   // Increase quality above this
+};
+
+const MESH_UPDATE_THRESHOLD = 0.01; // Minimum position delta to trigger mesh update
+
 // Fragment Shader for Background (Warping effect)
 const bgVertexShader = `
 varying vec2 vUv;
@@ -53,11 +67,26 @@ export class SceneManager {
         this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.1, 1000);
         this.camera.position.set(0, 0, 10);
 
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        // Detect device capability for adaptive settings
+        const deviceCapable = this.detectDeviceCapability();
+        const initialQuality = deviceCapable ? QUALITY_CONFIG.HIGH : QUALITY_CONFIG.MEDIUM;
+        
+        this.renderer = new THREE.WebGLRenderer({ 
+            antialias: initialQuality.antialias, 
+            alpha: true,
+            powerPreference: 'high-performance'
+        });
         this.renderer.setSize(this.width, this.height);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.container.appendChild(this.renderer.domElement);
+        
+        // Performance monitoring
+        this.currentQuality = initialQuality;
+        this.fpsHistory = [];
+        this.frameCount = 0;
+        this.lastFpsCheck = 0;
+        this.lastFrameTime = performance.now();
 
         this.clock = new THREE.Clock();
         this.mouse = new THREE.Vector2();
@@ -75,6 +104,10 @@ export class SceneManager {
         // Physics variables for blobs
         this.blobs = [];
         this.numBlobs = 8;
+        
+        // Track previous blob positions for conditional updates
+        this.lastBlobPositions = [];
+        this.needsMeshUpdate = true; // Always update on first frame
 
         // Initialize face manager
         this.faceManager = new FaceManager();
@@ -143,9 +176,8 @@ export class SceneManager {
                 }
             });
 
-        // 3. Marching Cubes Setup
-        const resolution = 64;
-        const material = new THREE.MeshPhysicalMaterial({
+        // 3. Marching Cubes Setup (using current quality settings)
+        this.marchingCubesMaterial = new THREE.MeshPhysicalMaterial({
             color: 0xffffff,
             metalness: 0.1,
             roughness: 0.99,
@@ -155,12 +187,7 @@ export class SceneManager {
             side: THREE.DoubleSide
         });
 
-        this.effect = new MarchingCubes(resolution, material, true, true, 100000);
-        this.effect.position.set(0, 0, 0);
-        this.effect.scale.set(5.0, 5.0, 0.5); 
-        this.effect.enableUvs = false;
-        this.effect.enableColors = true;
-        this.scene.add(this.effect);
+        this.createMarchingCubes(this.currentQuality.resolution);
 
         // Initialize Blob Data (Position, Velocity, Color)
         const colors = [
@@ -174,12 +201,13 @@ export class SceneManager {
         ];
 
         for (let i = 0; i < this.numBlobs; i++) {
+            const pos = new THREE.Vector3(
+                (Math.random() - 0.5) * 0.5,
+                (Math.random() - 0.5) * 0.5,
+                0
+            );
             this.blobs.push({
-                pos: new THREE.Vector3(
-                    (Math.random() - 0.5) * 0.5,
-                    (Math.random() - 0.5) * 0.5,
-                    0
-                ),
+                pos: pos,
                 vel: new THREE.Vector3(
                     (Math.random() - 0.5) * 0.01,
                     (Math.random() - 0.5) * 0.01,
@@ -189,15 +217,176 @@ export class SceneManager {
                 strength: 0.3 + Math.random() * 0.55,
                 subtract: 10
             });
+            // Initialize last positions for conditional updates
+            this.lastBlobPositions.push(pos.clone());
         }
+    }
+    
+    detectDeviceCapability() {
+        // Simple heuristic: check if device has high DPI or is mobile
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const highDPI = window.devicePixelRatio > 1.5;
+        
+        // Assume capable if not mobile and has reasonable DPI
+        return !isMobile && highDPI;
+    }
+    
+    createMarchingCubes(resolution) {
+        // Dispose of existing effect if it exists
+        if (this.effect) {
+            this.scene.remove(this.effect);
+            
+            // Dispose geometry if it exists (MarchingCubes manages its own geometry)
+            if (this.effect.geometry) {
+                this.effect.geometry.dispose();
+            }
+            
+            // Only dispose material if it's not our shared material
+            if (this.effect.material && this.effect.material !== this.marchingCubesMaterial) {
+                this.effect.material.dispose();
+            }
+            
+            // Call dispose if available (MarchingCubes may have cleanup method)
+            if (typeof this.effect.dispose === 'function') {
+                this.effect.dispose();
+            }
+        }
+        
+        // Create new MarchingCubes with specified resolution
+        this.effect = new MarchingCubes(resolution, this.marchingCubesMaterial, true, true, 100000);
+        this.effect.position.set(0, 0, 0);
+        this.effect.scale.set(5.0, 5.0, 0.5);
+        this.effect.enableUvs = false;
+        this.effect.enableColors = true;
+        this.scene.add(this.effect);
+        
+        // Update environment map if already loaded
+        if (this.scene.environment) {
+            this.effect.material.envMap = this.scene.environment;
+            this.effect.material.needsUpdate = true;
+        }
+        
+        // Reset needsMeshUpdate to force initial update
+        this.needsMeshUpdate = true;
+    }
+    
+    adjustQuality(newQuality) {
+        if (newQuality.resolution === this.currentQuality.resolution && 
+            newQuality.antialias === this.currentQuality.antialias) {
+            return; // No change needed
+        }
+        
+        // Update resolution if changed
+        if (newQuality.resolution !== this.currentQuality.resolution) {
+            this.createMarchingCubes(newQuality.resolution);
+        }
+        
+        // Update antialiasing if changed (requires renderer recreation)
+        if (newQuality.antialias !== this.currentQuality.antialias) {
+            const oldCanvas = this.renderer.domElement;
+            const oldContext = this.renderer.getContext();
+            
+            // Dispose old renderer
+            this.renderer.dispose();
+            oldCanvas.remove();
+            
+            // Create new renderer with updated settings
+            this.renderer = new THREE.WebGLRenderer({
+                antialias: newQuality.antialias,
+                alpha: true,
+                powerPreference: 'high-performance'
+            });
+            this.renderer.setSize(this.width, this.height);
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            this.container.appendChild(this.renderer.domElement);
+        }
+        
+        this.currentQuality = newQuality;
+    }
+    
+    monitorPerformance() {
+        const now = performance.now();
+        const deltaTime = now - this.lastFrameTime;
+        this.lastFrameTime = now;
+        
+        // Calculate FPS
+        const fps = deltaTime > 0 ? 1000 / deltaTime : 60;
+        
+        // Track FPS history (keep last 60 frames)
+        this.fpsHistory.push(fps);
+        if (this.fpsHistory.length > 60) {
+            this.fpsHistory.shift();
+        }
+        
+        // Check performance every 60 frames (~1 second at 60fps)
+        this.frameCount++;
+        if (this.frameCount % 60 === 0) {
+            const avgFps = this.fpsHistory.reduce((a, b) => a + b, 0) / this.fpsHistory.length;
+            
+            // Determine target quality based on FPS
+            let targetQuality = this.currentQuality;
+            
+            if (avgFps < FPS_THRESHOLDS.DEGRADE) {
+                // Performance is poor, reduce quality
+                if (this.currentQuality === QUALITY_CONFIG.HIGH) {
+                    targetQuality = QUALITY_CONFIG.MEDIUM;
+                } else if (this.currentQuality === QUALITY_CONFIG.MEDIUM) {
+                    targetQuality = QUALITY_CONFIG.LOW;
+                }
+            } else if (avgFps > FPS_THRESHOLDS.UPGRADE) {
+                // Performance is good, increase quality (with hysteresis)
+                if (this.currentQuality === QUALITY_CONFIG.LOW) {
+                    targetQuality = QUALITY_CONFIG.MEDIUM;
+                } else if (this.currentQuality === QUALITY_CONFIG.MEDIUM) {
+                    targetQuality = QUALITY_CONFIG.HIGH;
+                }
+            }
+            
+            // Apply quality adjustment if needed
+            if (targetQuality !== this.currentQuality) {
+                this.adjustQuality(targetQuality);
+            }
+        }
+    }
+    
+    shouldUpdateMesh() {
+        // Check if any blob has moved significantly
+        let totalDelta = 0;
+        
+        for (let i = 0; i < this.blobs.length; i++) {
+            const blob = this.blobs[i];
+            const lastPos = this.lastBlobPositions[i];
+            
+            if (!lastPos) {
+                this.needsMeshUpdate = true;
+                return true;
+            }
+            
+            const delta = blob.pos.distanceTo(lastPos);
+            totalDelta += delta;
+        }
+        
+        // Update if cumulative movement exceeds threshold
+        if (totalDelta > MESH_UPDATE_THRESHOLD) {
+            this.needsMeshUpdate = true;
+            // Update last positions
+            this.blobs.forEach((blob, i) => {
+                if (!this.lastBlobPositions[i]) {
+                    this.lastBlobPositions[i] = new THREE.Vector3();
+                }
+                this.lastBlobPositions[i].copy(blob.pos);
+            });
+            return true;
+        }
+        
+        return false;
     }
 
     updateBlobs(time) {
         if (!this.effect) return;
 
-        this.effect.reset();
-
-        // Update physics and add blobs
+        // Update physics
         this.blobs.forEach((blob, index) => {
             // 1. Center attraction force (Gravity towards 0,0,0)
             // Use reusable temp vector instead of clone()
@@ -223,18 +412,27 @@ export class SceneManager {
 
             blob.pos.add(blob.vel);
             blob.pos.z = 0; // Keep on plane
-
-            this.effect.addBall(
-                0.5 + blob.pos.x * 0.5,
-                0.5 + blob.pos.y * 0.5,
-                0.5,
-                blob.strength,
-                blob.subtract,
-                blob.color
-            );
         });
 
-        this.effect.update();
+        // Only update mesh if blobs have moved significantly
+        if (this.shouldUpdateMesh() || this.needsMeshUpdate) {
+            this.effect.reset();
+
+            // Add blobs to effect
+            this.blobs.forEach((blob) => {
+                this.effect.addBall(
+                    0.5 + blob.pos.x * 0.5,
+                    0.5 + blob.pos.y * 0.5,
+                    0.5,
+                    blob.strength,
+                    blob.subtract,
+                    blob.color
+                );
+            });
+
+            this.effect.update();
+            this.needsMeshUpdate = false;
+        }
         
         // Calculate center of mass of blobs
         this.calculateMassCenter();
@@ -396,6 +594,9 @@ export class SceneManager {
         if (this.isPaused) return;
 
         this.animationFrameId = requestAnimationFrame(this.animate);
+
+        // Monitor performance and adjust quality
+        this.monitorPerformance();
 
         const time = this.clock.getElapsedTime();
 

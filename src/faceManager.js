@@ -30,6 +30,11 @@ export class FaceManager {
         this.blinkInterval = null;
         this.talkingTimeline = null;
         
+        // Throttling for mouse updates
+        this.pendingMouseUpdate = null;
+        this.mouseUpdateRafId = null;
+        this.mouseUpdateTimeline = null;
+        
         this.init();
     }
     
@@ -164,43 +169,69 @@ export class FaceManager {
         this.mouseX = x;
         this.mouseY = y;
         
+        // Store pending update
+        this.pendingMouseUpdate = { x, y };
+        
+        // Throttle updates using requestAnimationFrame
+        if (this.mouseUpdateRafId === null) {
+            this.mouseUpdateRafId = requestAnimationFrame(() => {
+                this.applyMouseUpdate();
+                this.mouseUpdateRafId = null;
+            });
+        }
+    }
+    
+    applyMouseUpdate() {
+        if (!this.pendingMouseUpdate) return;
+        
+        const { x, y } = this.pendingMouseUpdate;
+        this.pendingMouseUpdate = null;
+        
         // Apply parallax effect to each element
         // Nose moves the most, eyes move the least
         const maxOffset = 15; // Maximum pixel offset
         
         // Reflect y-axis for staring mechanism (invert y direction)
-        const reflectedY = -this.mouseY;
+        const reflectedY = -y;
+        
+        // Kill existing timeline if it exists
+        if (this.mouseUpdateTimeline) {
+            this.mouseUpdateTimeline.kill();
+        }
+        
+        // Batch all updates into a single timeline for better performance
+        this.mouseUpdateTimeline = gsap.timeline();
         
         // Update nose position (most parallax)
-        gsap.to(this.elements.nose, {
-            x: this.mouseX * maxOffset * this.parallaxMultipliers.nose,
+        this.mouseUpdateTimeline.to(this.elements.nose, {
+            x: x * maxOffset * this.parallaxMultipliers.nose,
             y: reflectedY * maxOffset * this.parallaxMultipliers.nose,
-            duration: 0.3,
+            duration: 0.25,
             ease: 'power2.out'
-        });
+        }, 0);
         
         // Update mouth position
-        gsap.to(this.elements.mouth, {
-            x: this.mouseX * maxOffset * this.parallaxMultipliers.mouth,
+        this.mouseUpdateTimeline.to(this.elements.mouth, {
+            x: x * maxOffset * this.parallaxMultipliers.mouth,
             y: reflectedY * maxOffset * this.parallaxMultipliers.mouth,
-            duration: 0.3,
+            duration: 0.25,
             ease: 'power2.out'
-        });
+        }, 0);
         
         // Update eyes position (least parallax)
-        gsap.to(this.elements.leftEye, {
-            x: this.mouseX * maxOffset * this.parallaxMultipliers.leftEye,
+        this.mouseUpdateTimeline.to(this.elements.leftEye, {
+            x: x * maxOffset * this.parallaxMultipliers.leftEye,
             y: reflectedY * maxOffset * this.parallaxMultipliers.leftEye,
-            duration: 0.3,
+            duration: 0.25,
             ease: 'power2.out'
-        });
+        }, 0);
         
-        gsap.to(this.elements.rightEye, {
-            x: this.mouseX * maxOffset * this.parallaxMultipliers.rightEye,
+        this.mouseUpdateTimeline.to(this.elements.rightEye, {
+            x: x * maxOffset * this.parallaxMultipliers.rightEye,
             y: reflectedY * maxOffset * this.parallaxMultipliers.rightEye,
-            duration: 0.3,
+            duration: 0.25,
             ease: 'power2.out'
-        });
+        }, 0);
     }
     
     setExpression(type) {
@@ -438,6 +469,12 @@ export class FaceManager {
         }
         if (this.talkingTimeline) {
             this.talkingTimeline.kill();
+        }
+        if (this.mouseUpdateTimeline) {
+            this.mouseUpdateTimeline.kill();
+        }
+        if (this.mouseUpdateRafId !== null) {
+            cancelAnimationFrame(this.mouseUpdateRafId);
         }
         if (this.blinkInterval) {
             clearInterval(this.blinkInterval);
