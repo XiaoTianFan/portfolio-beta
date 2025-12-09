@@ -341,7 +341,16 @@ class App {
             this.chatHistory.push({ role: 'assistant', content: JSON.stringify(response) });
             this.chatHistory[this.chatHistory.length - 1] = { role: 'assistant', content: response.message };
 
-            this.addChatMessage('system', response.message);
+            // Add message but defer typing effect
+            const msg = this.addChatMessage('system', response.message, false, true);
+
+            let typingStarted = false;
+            const startTypingSafe = () => {
+                if (!typingStarted && msg.startTyping) {
+                    typingStarted = true;
+                    msg.startTyping();
+                }
+            };
 
             // Speak the response with TTS cursor animation
             this.audioService.speak(
@@ -349,10 +358,14 @@ class App {
                 () => {
                     // onStart callback
                     this.setTTSActive(true);
+                    // Start typing deferred message
+                    startTypingSafe();
                 },
                 () => {
                     // onEnd callback
                     this.setTTSActive(false);
+                    // Ensure text is shown even if onStart was missed (e.g. TTS error)
+                    startTypingSafe();
 
                     // Handle redirect after TTS if action is 'redirect'
                     if (response.action === 'redirect') {
@@ -378,7 +391,7 @@ class App {
         }
     }
 
-    addChatMessage(sender, text, isLoading = false) {
+    addChatMessage(sender, text, isLoading = false, deferTyping = false) {
         const msg = document.createElement('div');
         msg.className = `chat-msg ${sender} ${isLoading ? 'loading' : ''}`;
         msg.style.marginBottom = '8px';
@@ -406,8 +419,23 @@ class App {
         if (isLoading) {
             msg.textContent = text;
         } else {
+            if (deferTyping) {
+                msg.textContent = 'Thinking...';
+                msg.classList.add('loading');
+            }
+
             // Typewriter effect for non-loading messages
-            this.typewriterEffect(msg, text);
+            const startTyping = () => {
+                if (deferTyping) {
+                    msg.classList.remove('loading');
+                }
+                this.typewriterEffect(msg, text);
+            };
+            msg.startTyping = startTyping;
+
+            if (!deferTyping) {
+                startTyping();
+            }
         }
 
         if (chatContainer) {

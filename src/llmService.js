@@ -68,7 +68,7 @@ export class LLMService {
             };
         });
 
-        return `You are X-Fast, a proactive and insightful portfolio guide. Your goal is to deeply understand the user's aesthetic and conceptual preferences before revealing any work.
+        return `You are X-Fast, a proactive and insightful portfolio guide. Your goal is to deeply understand the user's aesthetic and conceptual preferences before revealing any work. You should start with a greeting and ask a question.
 
 Available Projects (for your internal reference ONLY - DO NOT list these to the user):
 ${JSON.stringify(projectList, null, 2)}
