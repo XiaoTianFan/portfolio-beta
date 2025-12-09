@@ -1,34 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="An interactive portfolio that empowers an intelligent agent to proactively select and present work based on context, conversation, and intent.">
+    <meta name="description"
+        content="An interactive portfolio that empowers an intelligent agent to proactively select and present work based on context, conversation, and intent.">
     <meta name="keywords" content="portfolio, interactive, AI, agent, projects, creative">
     <meta name="author" content="Portfolio">
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="Metaball Interface - Interactive Portfolio">
-    <meta property="og:description" content="An interactive portfolio that empowers an intelligent agent to proactively select and present work based on context, conversation, and intent.">
+    <meta property="og:description"
+        content="An interactive portfolio that empowers an intelligent agent to proactively select and present work based on context, conversation, and intent.">
     <meta property="og:image" content="/profile_photo.jpg">
-    
+
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Metaball Interface - Interactive Portfolio">
-    <meta name="twitter:description" content="An interactive portfolio that empowers an intelligent agent to proactively select and present work based on context, conversation, and intent.">
+    <meta name="twitter:description"
+        content="An interactive portfolio that empowers an intelligent agent to proactively select and present work based on context, conversation, and intent.">
     <meta name="twitter:image" content="/profile_photo.jpg">
-    
+
     <title>Xiaotian Fan - Portfolio Beta</title>
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/jpeg" href="/profile_photo.jpg">
     <link rel="apple-touch-icon" href="/profile_photo.jpg">
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div id="canvas-container"></div>
     <div id="tts-cursor"></div>
@@ -39,13 +44,14 @@
         <header>
             <button id="about-btn" class="text-btn">ABOUT</button>
         </header>
-        
+
         <div class="bottom-controls">
             <div class="landing-chat-container">
                 <div class="chat-history landing-chat-history" id="landing-chat-history"></div>
                 <div class="landing-input-wrapper">
                     <button id="mic-btn" class="icon-btn">
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
                             <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                             <line x1="12" y1="19" x2="12" y2="23"></line>
@@ -73,23 +79,37 @@
             <div class="about-text">
                 <h1>About This Portfolio</h1>
                 <p>
-                    This portfolio embodies a philosophy of agency and curation. Rather than presenting a static collection of projects, 
-                    it empowers an intelligent agent to proactively select and present work based on context, conversation, and intent.
+                    This portfolio embodies a philosophy of agency and curation. Rather than presenting a static
+                    collection of projects,
+                    it empowers an intelligent agent to proactively select and present work based on context,
+                    conversation, and intent.
                 </p>
                 <p>
-                    The traditional portfolio is a monologue—a fixed narrative chosen by its creator. Here, the portfolio becomes a dialogue. 
-                    The agent observes, interprets, and curates in real-time, selecting projects that resonate with the moment, the question, 
+                    The traditional portfolio is a monologue—a fixed narrative chosen by its creator. Here, the
+                    portfolio becomes a dialogue.
+                    The agent observes, interprets, and curates in real-time, selecting projects that resonate with the
+                    moment, the question,
                     or the emerging understanding between visitor and work.
                 </p>
                 <p>
-                    This approach acknowledges that meaning is not inherent but constructed through interaction. Each project presentation 
-                    is not predetermined but emerges from the intersection of inquiry and intelligence. The agent doesn't simply retrieve—it 
-                    reasons, connects, and chooses, transforming the portfolio from a showcase into a collaborative exploration.
+                    This approach acknowledges that meaning is not inherent but constructed through interaction. Each
+                    project presentation
+                    is not predetermined but emerges from the intersection of inquiry and intelligence. The agent
+                    doesn't simply retrieve—it
+                    reasons, connects, and chooses, transforming the portfolio from a showcase into a collaborative
+                    exploration.
                 </p>
                 <p>
-                    In letting the agent select, we embrace uncertainty and possibility. We, instead of only trust in the capacity of intelligent systems 
-                    to make meaningful connections, to see patterns we might miss, and to curate experiences that are both surprising and 
-                    deeply relevant, but also to be aware of the limitations of the system and thus realize our own agency of making each decision in the process.
+                    In letting the agent select, we embrace uncertainty and possibility. We, instead of only trust in
+                    the capacity of intelligent systems
+                    to make meaningful connections, to see patterns we might miss, and to curate experiences that are
+                    both surprising and
+                    deeply relevant, but also to be aware of the limitations of the system and thus realize our own
+                    agency of making each decision in the process.
+                </p>
+                <p style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.7;">
+                    More works: <a href="https://xiaotianfanx.com" target="_blank"
+                        style="color: inherit; text-decoration: underline;">Xiaotian Fan</a>
                 </p>
             </div>
         </div>
@@ -122,4 +142,5 @@
 
     <script type="module" src="/src/main.js"></script>
 </body>
+
 </html>

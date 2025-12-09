@@ -238,14 +238,8 @@ class App {
                     chatInputArea.style.display = 'flex';
                 }
 
-                // Clear chat history
-                this.chatHistory = [];
-                if (this.ui.chatHistory) {
-                    this.ui.chatHistory.innerHTML = '';
-                }
-                if (this.ui.landingChatHistory) {
-                    this.ui.landingChatHistory.innerHTML = '';
-                }
+                // Chat history is preserved
+
 
                 // Trigger system message and LLM follow-up
                 this.triggerPostViewingFollowUp();
