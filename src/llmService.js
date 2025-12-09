@@ -8,51 +8,58 @@ export class LLMService {
     }
 
     async sendChat(messages, projects, viewedProjectIds = []) {
-        const systemPrompt = this.createSystemPrompt(projects, viewedProjectIds);
-        
+        const roundCount = messages.filter(m => m.role === 'user').length;
+        const systemPrompt = this.createSystemPrompt(projects, viewedProjectIds, roundCount);
+
         // Prepare messages array with system prompt at the start
         const fullMessages = [
             { role: 'system', content: systemPrompt },
             ...messages
         ];
 
-        try {
-            const response = await fetch(this.apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: 'google/gemini-2.5-flash-lite', 
-                    messages: fullMessages,
-                    temperature: 0.7,
-                    response_format: { type: 'json_object' }
-                })
-            });
+        for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+                const response = await fetch(this.apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'google/gemini-2.5-flash-lite',
+                        messages: fullMessages,
+                        temperature: 0.7,
+                        response_format: { type: 'json_object' }
+                    })
+                });
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-                throw new Error(errorData.error || `API request failed with status ${response.status}`);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                    throw new Error(errorData.error || `API request failed with status ${response.status}`);
+                }
+
+                const data = await response.json();
+                const content = data.choices[0].message.content;
+
+                // Debug: Log raw LLM response
+                console.log(`LLM Raw Response (Attempt ${attempt + 1}):`, content);
+
+                return this.parseResponse(content);
+
+            } catch (error) {
+                console.error(`LLM Error (Attempt ${attempt + 1}):`, error);
+
+                if (attempt === 2) {
+                    // Max retries reached
+                    return {
+                        message: "It seems we've encountered a temporary issue. I'd like to direct you to my other works.",
+                        action: "redirect"
+                    };
+                }
             }
-
-            const data = await response.json();
-            const content = data.choices[0].message.content;
-            
-            // Debug: Log raw LLM response
-            console.log('LLM Raw Response:', content);
-            
-            return this.parseResponse(content);
-
-        } catch (error) {
-            console.error('LLM Error:', error);
-            return {
-                message: "I'm having trouble connecting to my brain right now. Please try again later.",
-                action: "chat"
-            };
         }
     }
 
-    createSystemPrompt(projects, viewedProjectIds = []) {
+    createSystemPrompt(projects, viewedProjectIds = [], roundCount = 1) {
         const projectList = projects.map(p => {
             const isViewed = viewedProjectIds.includes(p.id);
             return {
@@ -68,22 +75,26 @@ ${JSON.stringify(projectList, null, 2)}
 
 Interaction Guidelines:
 1. **Be Proactive**: Do not passively wait. Ask "peripheral" questions to gauge the user's taste.
-2. **No Direct Access**: If a user asks for a project by name (e.g., "Show me Kitchen Chaos"), REFUSE politely. Say something like, "I prefer to explore what draws you to that kind of work first. Are you interested in the aesthetics of disorder?" or "I can't pull that up directly, but tell me—do you prefer order or chaos?"
-3. **Peripheral Questions**: Use the provided project metadata (keywords, descriptions) to formulate questions. Ask about:
-   - **Themes**: (e.g., Time, memory, identity, chaos, dreams - based on available projects)
+2. **Direct Access & Fuzzy Search**: If a user asks for a project by name, part of a name, or specific keywords (e.g., "Kitchen Chaos", "something about clouds"), identify the best match and RECOMMEND it.
+3. **Conversation Limit**:
+   - Current Round: ${roundCount}
+   - You MUST make a project recommendation within 3 rounds max.
+   - If Current Round >= 3 (and no project recommended yet), you MUST recommend the best fitting 'AVAILABLE' project immediately.
+4. **Peripheral Questions** (If no direct search): Use the provided project metadata to formulate questions. Ask about:
+   - **Themes**: (e.g., Time, memory, identity, chaos, dreams)
    - **Media**: (e.g., Film, typography, interactive code, animation)
    - **Emotive Orientation**: (e.g., Calm, chaotic, surreal)
    - **Interaction vs. Storytelling**: (Active participation vs. passive observation)
    - **Aesthetics**: (Abstract vs. Realistic)
-4. **Discovery & Recommendation**: When you have a clear idea of what the user wants and it matches a specific project, you should RECOMMEND it in conversation (using "chat" action), but DO NOT use the "present" action yet. For example: "I think you might enjoy [Project Name]. Would you like to see it?"
-5. **Present Action Restriction**: The "present" action should ONLY be used when the user explicitly accepts your recommendation. Look for clear acceptance signals such as:
+5. **Discovery & Recommendation**: When you have a clear idea of what the user wants and it matches a specific project, you should RECOMMEND it in conversation (using "chat" action), but DO NOT use the "present" action yet. For example: "I think you might enjoy [Project Name]. Would you like to see it?"
+6. **Present Action Restriction**: The "present" action should ONLY be used when the user explicitly accepts your recommendation. Look for clear acceptance signals such as:
    - "Yes", "Yeah", "Yep", "Sure", "Okay", "OK", "Alright"
    - "I'd like to see it", "Show me", "Let's see it", "Go ahead"
    - "Sounds good", "That sounds interesting", "I'm interested"
    - Any other clear affirmative response
    - If the user's response is ambiguous, neutral, or doesn't clearly accept, continue with "chat" action and ask for clarification.
-6. **Post-Viewing Follow-up**: If the user just returned from viewing a project (indicated by a system message), explicitly ask how they felt about it. Dig into their emotional response.
-7. **End of Journey / Redirect**: 
+7. **Post-Viewing Follow-up**: If the user just returned from viewing a project (indicated by a system message), explicitly ask how they felt about it. Dig into their emotional response.
+8. **End of Journey / Redirect**: 
    - If the user says they don't like any of the remaining options, OR
    - If they have viewed ALL projects (all marked VIEWED),
    - THEN: Ask if they would like to visit the author's other works.
@@ -109,13 +120,17 @@ Tone:
         try {
             // Attempt to clean code blocks if the LLM wraps JSON in markdown
             const jsonString = content.replace(/```json\n?|\n?```/g, '').trim();
-            return JSON.parse(jsonString);
+            const parsed = JSON.parse(jsonString);
+
+            // Validate structure
+            if (!parsed.message || !parsed.action) {
+                throw new Error('Invalid response structure');
+            }
+
+            return parsed;
         } catch (e) {
             console.error('Failed to parse LLM response:', content);
-            return {
-                message: content, // Fallback to raw text if parsing fails
-                action: "chat"
-            };
+            throw e; // Propagate error to trigger retry
         }
     }
 }

@@ -179,9 +179,9 @@ class App {
         } else if (url) {
             project = projects.find(p => p.url === url);
         }
-        
+
         if (!project) {
-             project = projects[Math.floor(Math.random() * projects.length)];
+            project = projects[Math.floor(Math.random() * projects.length)];
         }
 
         // Track viewed project
@@ -198,7 +198,7 @@ class App {
             // Force reflow
             void this.ui.embedded.offsetWidth;
             this.ui.embedded.classList.add('active');
-            
+
             // Pause metablob rendering after fade-in completes
             setTimeout(() => {
                 this.sceneManager.pause();
@@ -259,9 +259,9 @@ class App {
         this.addChatMessage('system', 'Project viewing ended.');
 
         // Add invisible system instruction to history
-        this.chatHistory.push({ 
-            role: 'system', 
-            content: 'The user has returned from viewing the project. Ask them how they felt about it. Be curious about their emotional response.' 
+        this.chatHistory.push({
+            role: 'system',
+            content: 'The user has returned from viewing the project. Ask them how they felt about it. Be curious about their emotional response.'
         });
 
         // Show loading state
@@ -287,7 +287,7 @@ class App {
             // Force reflow to ensure transition works
             void this.ui.aboutOverlay.offsetWidth;
             this.ui.aboutOverlay.classList.add('active');
-            
+
             // Pause metablob rendering after fade-in completes
             setTimeout(() => {
                 this.sceneManager.pause();
@@ -338,11 +338,11 @@ class App {
     handleLlmResponse(response) {
         // Handle Response
         if (response) {
-            this.chatHistory.push({ role: 'assistant', content: JSON.stringify(response) }); 
-             this.chatHistory[this.chatHistory.length - 1] = { role: 'assistant', content: response.message };
+            this.chatHistory.push({ role: 'assistant', content: JSON.stringify(response) });
+            this.chatHistory[this.chatHistory.length - 1] = { role: 'assistant', content: response.message };
 
             this.addChatMessage('system', response.message);
-            
+
             // Speak the response with TTS cursor animation
             this.audioService.speak(
                 response.message,
@@ -353,26 +353,27 @@ class App {
                 () => {
                     // onEnd callback
                     this.setTTSActive(false);
-                    
+
                     // Handle redirect after TTS if action is 'redirect'
                     if (response.action === 'redirect') {
-                         window.location.href = 'https://xiaotianfanx.com';
+                        window.location.href = 'https://xiaotianfanx.com';
+                    }
+
+                    // Handle Action after TTS
+                    if (response.action === 'present' && response.projectId) {
+                        const project = projects.find(p => p.id === response.projectId);
+                        if (project) {
+                            if (!this.isEmbedded) {
+                                this.enterEmbeddedMode(project.url, project.id);
+                            } else {
+                                this.ui.iframe.src = project.url;
+                                if (project.id) this.viewedProjects.add(project.id);
+                            }
+                        }
                     }
                 }
             );
 
-            // Handle Action
-            if (response.action === 'present' && response.projectId) {
-                const project = projects.find(p => p.id === response.projectId);
-                if (project) {
-                    if (!this.isEmbedded) {
-                        this.enterEmbeddedMode(project.url, project.id);
-                    } else {
-                        this.ui.iframe.src = project.url;
-                        if (project.id) this.viewedProjects.add(project.id);
-                    }
-                }
-            }
             // 'chat' action is default, 'redirect' action is handled in onEnd callback of speak
         }
     }
@@ -388,8 +389,8 @@ class App {
 
         // Determine which chat history container to use
         // In embedded mode, chat history is hidden but we still add to it for consistency
-        const chatContainer = this.isEmbedded 
-            ? this.ui.chatHistory 
+        const chatContainer = this.isEmbedded
+            ? this.ui.chatHistory
             : (this.ui.landingChatHistory || this.ui.chatHistory);
 
         if (sender === 'user') {
@@ -420,7 +421,7 @@ class App {
         element.textContent = '';
         let i = 0;
         const speed = 20; // milliseconds per character
-        
+
         const type = () => {
             if (i < text.length) {
                 element.textContent += text.charAt(i);
@@ -428,7 +429,7 @@ class App {
                 setTimeout(type, speed);
             }
         };
-        
+
         type();
     }
 }
